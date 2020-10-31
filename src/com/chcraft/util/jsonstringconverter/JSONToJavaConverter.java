@@ -1,8 +1,6 @@
 package com.chcraft.util.jsonstringconverter;
 
 import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,27 +12,14 @@ import org.json.JSONObject;
 import com.chcraft.util.StringExtension;
 
 public class JSONToJavaConverter implements JSONStringConverter {	
-	@Override
-	public String toFileString(String packagePath, String jsonString ,String className, boolean makeGetterAndSetter) {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("package " + packagePath + ";\n\n");
-		
-		sb.append("import java.util.List;\n\n");
-		
-		sb.append("import org.json.JSONObject;\n\n");
-		
-		sb.append(toClassString(jsonString, className, makeGetterAndSetter));
-		
-		return sb.toString();
+	private Map<String, String> keyTypeMap;
+	
+	public JSONToJavaConverter() {
+		keyTypeMap = new HashMap<String, String>();
 	}
 	
-	@Override
-	public String toClassString(String jsonString, String className, boolean makeGetterAndSetter) {
+	public JSONObject readJSONString(String jsonString) {
 		JSONObject jsonObject = new JSONObject(jsonString);
-
-		// get key and value type.
-		Map<String, String> keyType = new HashMap<String, String>();
 		
 		Iterator<String> iter = jsonObject.keys();
 
@@ -44,9 +29,58 @@ public class JSONToJavaConverter implements JSONStringConverter {
 			Object value = jsonObject.get(key);
 			String type = getType(value, false);
 
-			keyType.put(key, type);
+			keyTypeMap.put(key, type);
 		}
+		
+		return jsonObject;
+	}
+	
+	public boolean setKeyType(String key, String type) {
+		if(!keyTypeMap.containsKey(key)) {
+			return false;
+		}
+		keyTypeMap.replace(key, type);
+		return true;
+	}
+	
+	public boolean changeKeyName(String before, String after) {
+		if(!keyTypeMap.containsKey(before)) {
+			return false;
+		}
+		
+		if(keyTypeMap.containsKey(after)) {
+			return false;
+		}
+		
+		String keyType = keyTypeMap.get(before);
+		keyTypeMap.remove(before);
+		keyTypeMap.put(after, keyType);
+		
+		return true;
+	}
+	
+	@Override
+	public String generateClassFileString(String classPath, String jsonString ,String className, boolean makeGetterAndSetter) {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("package " + classPath + ";\n\n");
+		
+		sb.append("import java.util.List;\n\n");
+		
+		sb.append("import org.json.JSONObject;\n\n");
+		
+		sb.append(generateClassString(jsonString, className, makeGetterAndSetter));
+		
+		return sb.toString();
+	}
+	
+	@Override
+	public String generateClassString(String jsonString, String className, boolean makeGetterAndSetter) {
+		readJSONString(jsonString);
 
+		// get key and value type.
+		Map<String, String> keyType = getKeyTypeMap();
+		
 		// Generate File string.
 		StringBuilder sb = new StringBuilder();
 		sb.append("public class " + className + "{\n");
@@ -66,19 +100,6 @@ public class JSONToJavaConverter implements JSONStringConverter {
 
 		return sb.toString();
 	}
-
-	@Override
-	public List<String> getKeys(String jsonString){
-		JSONObject jsonObject = new JSONObject(jsonString);
-		
-		List<String> keys = new ArrayList<String>();
-		
-		for(String key : jsonObject.keySet()) {
-			keys.add(key);
-		}
-		
-		return keys;
-	}
 	
 	/***
 	 * 
@@ -87,7 +108,7 @@ public class JSONToJavaConverter implements JSONStringConverter {
 	 *         etc...), return it's type. else if value is JSONArray, return
 	 *         List<element's type> if value is null, return "Object".
 	 */
-	private static String getType(Object value, Boolean isJSONArray) {
+	private String getType(Object value, Boolean isJSONArray) {
 		if (value instanceof JSONObject) {
 			return "JSONObject";
 		}
@@ -125,11 +146,11 @@ public class JSONToJavaConverter implements JSONStringConverter {
 		}
 	}
 	
-	private static void addVariable(StringBuilder sb, String variableName, String type) {
+	private void addVariable(StringBuilder sb, String variableName, String type) {
 		sb.append("\tprivate " + type + " " + variableName + ";\n");
 	}
 	
-	private static void generateGetterAndSetter(StringBuilder sb, String variableName, String type) {
+	private void generateGetterAndSetter(StringBuilder sb, String variableName, String type) {
 		sb.append("\tpublic " + type + " get" + StringExtension.toFirstCharUpperCase(variableName) + "() {\n");
 		sb.append("\t\treturn this." + variableName + ";\n");
 		sb.append("\t}\n\n");
@@ -137,5 +158,9 @@ public class JSONToJavaConverter implements JSONStringConverter {
 		sb.append("\tpublic void set" + StringExtension.toFirstCharUpperCase(variableName) + "("+ type + " " + variableName +") {\n");
 		sb.append("\t\tthis." + variableName + " = " + variableName + ";\n");
 		sb.append("\t}\n\n");
+	}
+	
+	public Map<String, String> getKeyTypeMap(){
+		return keyTypeMap;
 	}
 }

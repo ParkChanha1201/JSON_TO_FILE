@@ -3,6 +3,7 @@ package com.chcraft.util.test;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.chcraft.util.jsonstringconverter.JSONStringConverter;
 import com.chcraft.util.jsonstringconverter.JSONToJavaConverter;
 
 public class JSONConverterTest {
@@ -20,5 +21,12 @@ public class JSONConverterTest {
 				"\"test5\" : 0.0,\r\n" + 
 				"\"test6\" : \"string\"\r\n" + 
 				"}";
+	}
+	
+	@Test
+	public void generateTest() {
+		JSONStringConverter converter = new JSONToJavaConverter();
+		
+		System.out.println(converter.generateClassFileString("com.chcraft.json", testcase1, className, true));
 	}
 }
