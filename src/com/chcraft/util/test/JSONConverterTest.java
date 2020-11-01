@@ -1,5 +1,8 @@
 package com.chcraft.util.test;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,6 +12,7 @@ import com.chcraft.util.jsonstringconverter.JSONToJavaConverter;
 public class JSONConverterTest {
 	private String className;
 	private String testcase1;
+	private JSONStringConverter converter = new JSONToJavaConverter();
 	
 	@Before
 	public void init() {
@@ -25,8 +29,29 @@ public class JSONConverterTest {
 	
 	@Test
 	public void generateTest() {
-		JSONStringConverter converter = new JSONToJavaConverter();
+		converter.generateClassFileString("com.chcraft.json", testcase1, className, true);
+	}
+	
+	@Test
+	public void javaConverterTest() {
+		JSONToJavaConverter javaConverter = (JSONToJavaConverter)converter;
 		
-		System.out.println(converter.generateClassFileString("com.chcraft.json", testcase1, className, true));
+		javaConverter.readJSONString(testcase1);
+		
+		Map<String, String> keyTypeMap = javaConverter.getKeyTypeMap();
+		printMap(keyTypeMap);
+		
+		javaConverter.changeKeyName("test1", "test1_changed");
+		printMap(keyTypeMap);
+
+		javaConverter.setKeyType("test1_changed", "OtherClass");
+		printMap(keyTypeMap);
+	}
+	
+	private void printMap(Map<String, String>map) {
+		for(Entry<String, String> entry : map.entrySet()) {
+			System.out.println(entry.getKey() + " " + entry.getValue());
+		}
+		System.out.println();
 	}
 }

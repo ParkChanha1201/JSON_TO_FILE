@@ -35,28 +35,44 @@ public class JSONToJavaConverter implements JSONStringConverter {
 		return jsonObject;
 	}
 	
-	public boolean setKeyType(String key, String type) {
+	/***
+	 * 
+	 * @param key
+	 * @param type
+	 * @return if key exists return before type
+	 */
+	public String setKeyType(String key, String type) {
 		if(!keyTypeMap.containsKey(key)) {
-			return false;
+			return "";
 		}
+		String beforeType = keyTypeMap.get(key);
+		
 		keyTypeMap.replace(key, type);
-		return true;
+		
+		return beforeType;
 	}
 	
-	public boolean changeKeyName(String before, String after) {
+	/***
+	 * 
+	 * @param before
+	 * @param after
+	 * @return if change success return before
+	 */
+	public String changeKeyName(String before, String after) {
 		if(!keyTypeMap.containsKey(before)) {
-			return false;
+			return "";
 		}
 		
+		//duplicated key
 		if(keyTypeMap.containsKey(after)) {
-			return false;
+			return "";
 		}
 		
 		String keyType = keyTypeMap.get(before);
 		keyTypeMap.remove(before);
 		keyTypeMap.put(after, keyType);
 		
-		return true;
+		return before;
 	}
 	
 	@Override
